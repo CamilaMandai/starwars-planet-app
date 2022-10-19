@@ -9,7 +9,7 @@ export default function Home() {
   const [filterCategories, setFilterCategories] = useState({
     columnFilter: 'population',
     comparisonFilter: 'maior que',
-    valueFilter: 0,
+    valueFilter: '0',
   });
 
   useEffect(() => {
@@ -45,14 +45,16 @@ export default function Home() {
   const clickFilter = () => {
     const { columnFilter, comparisonFilter, valueFilter } = filterCategories;
 
-    const searchedPlanet = planetList.filter((planet) => {
+    const searchedPlanet = filteredList.filter((planet) => {
       switch (comparisonFilter) {
       case 'maior que':
         return planet[columnFilter] > Number(valueFilter);
       case 'menor que':
         return planet[columnFilter] < Number(valueFilter);
-      default:
+      case 'igual a':
         return planet[columnFilter] === valueFilter;
+      default:
+        return true;
       }
     });
     setFilteredList(searchedPlanet);
@@ -60,6 +62,7 @@ export default function Home() {
 
   return (
     <div>
+      <h1>Projeto Star Wars</h1>
       <div>
         <input
           type="text"
@@ -73,7 +76,7 @@ export default function Home() {
             name="columnFilter"
             onChange={ handleFilter }
           >
-            <option value="population" selected>population</option>
+            <option value="population">population</option>
             <option value="orbital_period">orbital_period</option>
             <option value="diameter">diameter</option>
             <option value="rotation_period">rotation_period</option>
@@ -84,7 +87,7 @@ export default function Home() {
             name="comparisonFilter"
             onChange={ handleFilter }
           >
-            <option value="maior que" selected>maior que</option>
+            <option value="maior que">maior que</option>
             <option value="menor que">menor que</option>
             <option value="igual a">igual a</option>
           </select>
@@ -125,7 +128,7 @@ export default function Home() {
         <tbody>
           {
             filteredList.map((planet) => (
-              <tr key={ planet.name }>
+              <tr key={ planet.name } data-testid="planet-row">
                 <td>{planet.name}</td>
                 <td>{planet.rotation_period}</td>
                 <td>{planet.orbital_period}</td>
