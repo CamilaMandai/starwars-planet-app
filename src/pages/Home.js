@@ -6,6 +6,12 @@ export default function Home() {
 
   const [filteredList, setFilteredList] = useState(planetList);
 
+  const [filterCategories, setFilterCategories] = useState({
+    columnFilter: 'population',
+    comparisonFilter: 'maior que',
+    valueFilter: 0,
+  });
+
   useEffect(() => {
     const fetchPlanets = async () => {
       const req = await fetch('https://swapi.dev/api/planets');
@@ -31,14 +37,73 @@ export default function Home() {
     setFilteredList(searchedPlanet);
   };
 
+  const handleFilter = ({ target }) => {
+    const { name, value } = target;
+    setFilterCategories((prevCategories) => ({ ...prevCategories, [name]: value }));
+  };
+
+  const clickFilter = () => {
+    const { columnFilter, comparisonFilter, valueFilter } = filterCategories;
+
+    const searchedPlanet = planetList.filter((planet) => {
+      switch (comparisonFilter) {
+      case 'maior que':
+        return planet[columnFilter] > Number(valueFilter);
+      case 'menor que':
+        return planet[columnFilter] < Number(valueFilter);
+      default:
+        return planet[columnFilter] === valueFilter;
+      }
+    });
+    setFilteredList(searchedPlanet);
+  };
+
   return (
     <div>
-      <input
-        type="text"
-        data-testid="name-filter"
-        placeholder="Search"
-        onChange={ handleChange }
-      />
+      <div>
+        <input
+          type="text"
+          data-testid="name-filter"
+          placeholder="Search"
+          onChange={ handleChange }
+        />
+        <div>
+          <select
+            data-testid="column-filter"
+            name="columnFilter"
+            onChange={ handleFilter }
+          >
+            <option value="population" selected>population</option>
+            <option value="orbital_period">orbital_period</option>
+            <option value="diameter">diameter</option>
+            <option value="rotation_period">rotation_period</option>
+            <option value="surface_water">surface_water</option>
+          </select>
+          <select
+            data-testid="comparison-filter"
+            name="comparisonFilter"
+            onChange={ handleFilter }
+          >
+            <option value="maior que" selected>maior que</option>
+            <option value="menor que">menor que</option>
+            <option value="igual a">igual a</option>
+          </select>
+          <input
+            name="valueFilter"
+            value={ filterCategories.valueFilter }
+            type="number"
+            data-testid="value-filter"
+            onChange={ handleFilter }
+          />
+          <button
+            type="button"
+            data-testid="button-filter"
+            onClick={ clickFilter }
+          >
+            Filtrar
+          </button>
+        </div>
+      </div>
       <table>
         <thead>
           <tr>
