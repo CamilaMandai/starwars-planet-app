@@ -1,16 +1,56 @@
 import React, { useContext, useEffect, useState } from 'react';
+import SearchInput from '../components/SearchInput';
+import Selects from '../components/Selects';
+import Table from '../components/Table';
 import { MyContext } from '../context/Provider';
 
 export default function Home() {
-  const { planetList, setPlanetList } = useContext(MyContext);
+  const { planetList,
+    setPlanetList,
+    // addFilterByNumericValues,
+    filterByNumericValues,
+    setFilterByNumericValues,
+  } = useContext(MyContext);
 
   const [filteredList, setFilteredList] = useState(planetList);
 
+  const [inputCategories, setInputCategories] = useState({
+    column: ['population',
+      'orbital_period',
+      'diameter',
+      'rotation_period',
+      'surface_water'],
+    comparison: ['maior que', 'menor que', 'igual a'],
+  });
+
   const [filterCategories, setFilterCategories] = useState({
-    columnFilter: 'population',
-    comparisonFilter: 'maior que',
+    columnFilter: inputCategories.column[0],
+    comparisonFilter: inputCategories.comparison[0],
     valueFilter: '0',
   });
+
+  // Solucao indicada pelo Anderson Nunes para que o select possa reconhecer o primeiro valor de options como selected
+  useEffect(() => {
+    const setInitialFilter = () => {
+      setFilterCategories({
+        columnFilter: inputCategories.column[0],
+        comparisonFilter: inputCategories.comparison[0],
+        valueFilter: '0',
+      });
+    };
+    setInitialFilter();
+  }, [inputCategories]);
+
+  const deleteFilterByNumericValues = (columnFilter, all) => {
+    if (all) {
+      setFilterByNumericValues([]);
+    } else {
+      const uptFilter = filterByNumericValues.filter(
+        (e) => e.columnFilter !== columnFilter,
+      );
+      setFilterByNumericValues(uptFilter);
+    }
+  };
 
   useEffect(() => {
     const fetchPlanets = async () => {
@@ -20,8 +60,6 @@ export default function Home() {
       results.forEach((planet) => { delete planet.residents; });
       setPlanetList(results);
     };
-    // const asynFetch = async () => fetchPlanets();
-    // asynFetch();
     fetchPlanets();
   }, [setPlanetList]);
 
@@ -29,124 +67,94 @@ export default function Home() {
     setFilteredList(planetList);
   }, [planetList]);
 
-  const handleChange = ({ target }) => {
-    const { value } = target;
-    const searchedPlanet = planetList.filter(
-      (planet) => planet.name.toLowerCase().includes(value),
-    );
-    setFilteredList(searchedPlanet);
+  const checkFilterLength = () => {
+    if (filterByNumericValues.length === 1) {
+      setFilteredList(planetList);
+    } else {
+      const newPlanetList = planetList.filter(
+        (planet) => filterByNumericValues.some((filter) => {
+          switch (filter.comparisonFilter) {
+          case 'maior que':
+            return planet[filter.columnFilter] > Number(filter.valueFilter);
+          case 'menor que':
+            return planet[filter.columnFilter] < Number(filter.valueFilter);
+          case 'igual a':
+            return planet[filter.columnFilter] === filter.valueFilter;
+          default:
+            return true;
+          }
+        }),
+      );
+      setFilteredList(newPlanetList);
+    }
   };
 
-  const handleFilter = ({ target }) => {
-    const { name, value } = target;
-    setFilterCategories((prevCategories) => ({ ...prevCategories, [name]: value }));
+  const deleteClick = (element) => {
+    const { columnFilter, comparisonFilter, valueFilter } = element;
+    setFilterCategories({ columnFilter, comparisonFilter, valueFilter });
+    deleteFilterByNumericValues(columnFilter);
+    setInputCategories((prev) => ({
+      column: [...prev.column, columnFilter],
+      comparison: [...prev.comparison, comparisonFilter],
+    }));
+
+    checkFilterLength();// funcao chamada para voltar a lista completa caso o filtro fique vazio
+    // upFilteredListAfterRmClick(columnFilter, comparisonFilter, valueFilter);
   };
 
-  const clickFilter = () => {
-    const { columnFilter, comparisonFilter, valueFilter } = filterCategories;
-
-    const searchedPlanet = filteredList.filter((planet) => {
-      switch (comparisonFilter) {
-      case 'maior que':
-        return planet[columnFilter] > Number(valueFilter);
-      case 'menor que':
-        return planet[columnFilter] < Number(valueFilter);
-      case 'igual a':
-        return planet[columnFilter] === valueFilter;
-      default:
-        return true;
-      }
+  const rmFilters = () => {
+    deleteFilterByNumericValues(null, true);
+    setInputCategories({
+      column: ['population',
+        'orbital_period',
+        'diameter',
+        'rotation_period',
+        'surface_water'],
+      comparison: ['maior que', 'menor que', 'igual a'],
     });
-    setFilteredList(searchedPlanet);
+    setFilteredList(planetList);
   };
 
   return (
     <div>
       <h1>Projeto Star Wars</h1>
       <div>
-        <input
-          type="text"
-          data-testid="name-filter"
-          placeholder="Search"
-          onChange={ handleChange }
+        <SearchInput setFilteredList={ setFilteredList } />
+        <Selects
+          setFilterCategories={ setFilterCategories }
+          filterCategories={ filterCategories }
+          filteredList={ filteredList }
+          setFilteredList={ setFilteredList }
+          setInputCategories={ setInputCategories }
+          inputCategories={ inputCategories }
         />
-        <div>
-          <select
-            data-testid="column-filter"
-            name="columnFilter"
-            onChange={ handleFilter }
-          >
-            <option value="population">population</option>
-            <option value="orbital_period">orbital_period</option>
-            <option value="diameter">diameter</option>
-            <option value="rotation_period">rotation_period</option>
-            <option value="surface_water">surface_water</option>
-          </select>
-          <select
-            data-testid="comparison-filter"
-            name="comparisonFilter"
-            onChange={ handleFilter }
-          >
-            <option value="maior que">maior que</option>
-            <option value="menor que">menor que</option>
-            <option value="igual a">igual a</option>
-          </select>
-          <input
-            name="valueFilter"
-            value={ filterCategories.valueFilter }
-            type="number"
-            data-testid="value-filter"
-            onChange={ handleFilter }
-          />
-          <button
-            type="button"
-            data-testid="button-filter"
-            onClick={ clickFilter }
-          >
-            Filtrar
-          </button>
-        </div>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Rotation Period</th>
-            <th>Orbital Period</th>
-            <th>Diameter</th>
-            <th>Climate</th>
-            <th>Gravity</th>
-            <th>Terrain</th>
-            <th>Surface Water</th>
-            <th>Population</th>
-            <th>Films</th>
-            <th>Created</th>
-            <th>Edited</th>
-            <th>URL</th>
-          </tr>
-        </thead>
-        <tbody>
-          {
-            filteredList.map((planet) => (
-              <tr key={ planet.name } data-testid="planet-row">
-                <td>{planet.name}</td>
-                <td>{planet.rotation_period}</td>
-                <td>{planet.orbital_period}</td>
-                <td>{planet.diameter}</td>
-                <td>{planet.climate}</td>
-                <td>{planet.gravity}</td>
-                <td>{planet.terrain}</td>
-                <td>{planet.surface_water}</td>
-                <td>{planet.population}</td>
-                <td>{planet.films}</td>
-                <td>{planet.created}</td>
-                <td>{planet.edited}</td>
-                <td>{planet.url}</td>
-              </tr>
-            ))
-          }
-        </tbody>
-      </table>
+      <div>
+        {filterByNumericValues.map((element, index) => (
+          <p key={ index } data-testid="filter">
+            <span data-testid="filter-column">{element.columnFilter}</span>
+            {' '}
+            <span data-testid="filter-comparison">{element.comparisonFilter}</span>
+            {' '}
+            <span data-testid="filter-value">{element.valueFilter}</span>
+            <button
+              type="button"
+              data-testid="filter-button"
+              onClick={ () => deleteClick(element) }
+            >
+              Excluir
+            </button>
+          </p>
+        ))}
+      </div>
+      <button
+        type="button"
+        data-testid="button-remove-filters"
+        onClick={ rmFilters }
+      >
+        Remover Filtragens
+      </button>
+      <Table filteredList={ filteredList } />
     </div>
   );
 }

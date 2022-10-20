@@ -68,10 +68,29 @@ test('Verifica se filtra os planetas com rotation_period === 23', async () => {
   userEvent.selectOptions(colum,'rotation_period');
   userEvent.selectOptions(comparison,'igual a')
   userEvent.type(inputValue, 23)
-  const btnSearch = screen.getByTestId('button-filter');
+  const btnSearch = screen.getByText(/filtrar/i);
   userEvent.click(btnSearch);
-  const planetRows = screen.getAllByTestId('planet-row');
+  // const planetRows = await screen.findAllByTestId('planet-row');
   // expect(planetRows.length).toBe(3);
   console.log(planetRows.length)
+  global.fetch.mockClear();
+})
+
+test('Se é possivel selecionar opção "maior que"', async () => {
+  global.fetch = jest.fn(() => Promise.resolve({
+    json: () => Promise.resolve(testData),
+  }));
+  render(<App />);
+  const loading = screen.getByText(/loading.../i);
+  await waitForElementToBeRemoved(loading);
+  const colum = screen.getByTestId('column-filter');
+  const comparison = screen.getByTestId('comparison-filter');
+  const inputValue = screen.getAllByTestId('value-filter');
+  userEvent.selectOptions(colum,'rotation_period');
+  userEvent.selectOptions(comparison,'maior que')
+  userEvent.type(inputValue, 23)
+  const btnSearch = screen.getByText(/filtrar/i);
+  userEvent.click(btnSearch);
+
   global.fetch.mockClear();
 })
