@@ -75,14 +75,12 @@ export default function Home() {
       const newPlanetList = planetList.filter(
         (planet) => filterByNumericValues.some((filter) => {
           switch (filter.comparisonFilter) {
-          case 'maior que':
-            return planet[filter.columnFilter] > Number(filter.valueFilter);
           case 'menor que':
             return planet[filter.columnFilter] < Number(filter.valueFilter);
           case 'igual a':
             return planet[filter.columnFilter] === filter.valueFilter;
           default:
-            return true;
+            return planet[filter.columnFilter] > Number(filter.valueFilter);
           }
         }),
       );

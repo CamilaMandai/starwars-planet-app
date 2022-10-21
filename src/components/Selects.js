@@ -33,14 +33,14 @@ export default function Selects(
     const { columnFilter, comparisonFilter, valueFilter } = filterCategories;
     const searchedPlanet = filteredList.filter((planet) => {
       switch (comparisonFilter) {
-      case 'maior que':
-        return planet[columnFilter] > Number(valueFilter);
+      // case 'maior que':
       case 'menor que':
         return planet[columnFilter] < Number(valueFilter);
       case 'igual a':
         return planet[columnFilter] === valueFilter;
       default:
-        return true;
+        return planet[columnFilter] > Number(valueFilter);
+        // return true;
       }
     });
     addFilterByNumericValues(filterCategories);

@@ -55,7 +55,7 @@ test('Verifica se ao clicar no botao, filtra o planeta', async () => {
   global.fetch.mockClear();
 })
 
-test('Verifica se filtra os planetas com rotation_period === 23', async () => {
+test('Verifica se filtra os planetas com rotation_period === 23 e depois outro filtro', async () => {
   global.fetch = jest.fn(() => Promise.resolve({
     json: () => Promise.resolve(testData),
   }));
@@ -70,13 +70,21 @@ test('Verifica se filtra os planetas com rotation_period === 23', async () => {
   userEvent.type(inputValue, 23)
   const btnSearch = screen.getByText(/filtrar/i);
   userEvent.click(btnSearch);
-  // const planetRows = await screen.findAllByTestId('planet-row');
-  // expect(planetRows.length).toBe(3);
-  console.log(planetRows.length)
+  userEvent.selectOptions(colum,'population');
+  userEvent.selectOptions(comparison,'menor que');
+  userEvent.type(inputValue, 10000);
+  userEvent.click(btnSearch);
+  userEvent.selectOptions(colum,'diameter');
+  userEvent.selectOptions(comparison,'maior que')
+  userEvent.type(inputValue, 10000)
+  userEvent.click(btnSearch);
+
+  const filterRows = screen.getAllByTestId('filter-button');
+  expect(filterRows.length).toBe(3);
   global.fetch.mockClear();
 })
 
-test('Se é possivel selecionar opção "maior que"', async () => {
+test('Se é possivel selecionar opção "menor que"', async () => {
   global.fetch = jest.fn(() => Promise.resolve({
     json: () => Promise.resolve(testData),
   }));
@@ -87,10 +95,174 @@ test('Se é possivel selecionar opção "maior que"', async () => {
   const comparison = screen.getByTestId('comparison-filter');
   const inputValue = screen.getAllByTestId('value-filter');
   userEvent.selectOptions(colum,'rotation_period');
-  userEvent.selectOptions(comparison,'maior que')
+  userEvent.selectOptions(comparison,'menor que')
   userEvent.type(inputValue, 23)
   const btnSearch = screen.getByText(/filtrar/i);
   userEvent.click(btnSearch);
+  const filtro = screen.getByRole('button', {
+    name: /excluir/i
+  })
+  expect(filtro).toBeDefined();
 
   global.fetch.mockClear();
-})
+});
+
+test('Se ao selecionar opção de ordenação "population" e "ascendente" retorna tabela ordenada', async () => {
+  global.fetch = jest.fn(() => Promise.resolve({
+    json: () => Promise.resolve(testData),
+  }));
+  render(<App />);
+  const loading = screen.getByText(/loading.../i);
+  await waitForElementToBeRemoved(loading);
+  const select = screen.getByTestId('column-sort');
+  const radioAsc = screen.getByTestId('column-sort-input-asc');
+  userEvent.selectOptions(select, 'population');
+  userEvent.click(radioAsc);
+  const btnSort = screen.getByRole('button', {
+    name: /ordenar/i
+  })
+  userEvent.click(btnSort);
+  const smallestPopulation = screen.getAllByTestId('planet-name');
+  expect(smallestPopulation[0].innerHTML).toBe('Yavin IV');
+
+  global.fetch.mockClear();
+});
+
+test('Se ao selecionar opção de ordenação "population" e "descendent" retorna tabela ordenada', async () => {
+  global.fetch = jest.fn(() => Promise.resolve({
+    json: () => Promise.resolve(testData),
+  }));
+  render(<App />);
+  const loading = screen.getByText(/loading.../i);
+  await waitForElementToBeRemoved(loading);
+  const select = screen.getByTestId('column-sort');
+  const radioDesc = screen.getByTestId('column-sort-input-desc');
+  userEvent.selectOptions(select, 'diameter');
+  userEvent.click(radioDesc);
+  const btnSort = screen.getByRole('button', {
+    name: /ordenar/i
+  })
+  userEvent.click(btnSort);
+  const smallestPopulation = screen.getAllByTestId('planet-name');
+  expect(smallestPopulation[0].innerHTML).toBe('Bespin');
+
+  global.fetch.mockClear();
+});
+
+test('Se ao selecionar opção de ordenação "rotation_period" e "descendent" retorna tabela ordenada', async () => {
+  global.fetch = jest.fn(() => Promise.resolve({
+    json: () => Promise.resolve(testData),
+  }));
+  render(<App />);
+  const loading = screen.getByText(/loading.../i);
+  await waitForElementToBeRemoved(loading);
+  const select = screen.getByTestId('column-sort');
+  const radioDesc = screen.getByTestId('column-sort-input-desc');
+  userEvent.selectOptions(select, 'rotation_period');
+  userEvent.click(radioDesc);
+  const btnSort = screen.getByRole('button', {
+    name: /ordenar/i
+  })
+  userEvent.click(btnSort);
+  const smallestPopulation = screen.getAllByTestId('planet-name');
+  expect(smallestPopulation[0].innerHTML).toBe('Kamino');
+
+  global.fetch.mockClear();
+});
+
+test('Se ao aplicar um filtro, é possível excluí-lo depois', async () => {
+  global.fetch = jest.fn(() => Promise.resolve({
+    json: () => Promise.resolve(testData),
+  }));
+  render(<App />);
+  const loading = screen.getByText(/loading.../i);
+  await waitForElementToBeRemoved(loading);
+  const colum = screen.getByTestId('column-filter');
+  const comparison = screen.getByTestId('comparison-filter');
+  const inputValue = screen.getAllByTestId('value-filter');
+  userEvent.selectOptions(colum,'rotation_period');
+  userEvent.selectOptions(comparison,'menor que')
+  userEvent.type(inputValue, 23)
+  const btnSearch = screen.getByText(/filtrar/i);
+  userEvent.click(btnSearch);
+  expect(comparison.length).toBe(2);
+  const filtro = screen.getByRole('button', {
+    name: /excluir/i
+  })
+  userEvent.click(filtro);
+  expect(comparison.length).toBe(3);
+
+  
+  global.fetch.mockClear();
+});
+
+test('Se ao aplicar três filtros, é possível excluí-los todos de uma vez com o botão "Remover Filtragens"', async () => {
+  global.fetch = jest.fn(() => Promise.resolve({
+    json: () => Promise.resolve(testData),
+  }));
+  render(<App />);
+  const loading = screen.getByText(/loading.../i);
+  await waitForElementToBeRemoved(loading);
+  const colum = screen.getByTestId('column-filter');
+  const comparison = screen.getByTestId('comparison-filter');
+  const inputValue = screen.getAllByTestId('value-filter');
+  userEvent.selectOptions(colum,'rotation_period');
+  userEvent.selectOptions(comparison,'menor que')
+  userEvent.type(inputValue, 23)
+  const btnSearch = screen.getByText(/filtrar/i);
+  userEvent.click(btnSearch);
+  userEvent.selectOptions(colum,'population');
+  userEvent.selectOptions(comparison,'maior que');
+  userEvent.type(inputValue, 10000);
+  userEvent.click(btnSearch);
+  userEvent.selectOptions(colum,'diameter');
+  userEvent.selectOptions(comparison,'igual a');
+  userEvent.type(inputValue, 10000);
+  userEvent.click(btnSearch);
+  const Removerfiltros = screen.getByRole('button', {
+    name: /remover filtragens/i
+  })
+  userEvent.click(Removerfiltros);
+  expect(comparison.length).toBe(3);
+
+  
+  global.fetch.mockClear();
+});
+
+test('Se ao aplicar três filtros, e excluir um por um, se a tabela renderiza corretamente', async () => {
+  global.fetch = jest.fn(() => Promise.resolve({
+    json: () => Promise.resolve(testData),
+  }));
+  render(<App />);
+  const loading = screen.getByText(/loading.../i);
+  await waitForElementToBeRemoved(loading);
+  const colum = screen.getByTestId('column-filter');
+  const comparison = screen.getByTestId('comparison-filter');
+  const inputValue = screen.getAllByTestId('value-filter');
+  userEvent.selectOptions(colum,'rotation_period');
+  userEvent.selectOptions(comparison,'menor que')
+  userEvent.type(inputValue, 23)
+  const btnSearch = screen.getByText(/filtrar/i);
+  userEvent.click(btnSearch);
+  userEvent.selectOptions(colum,'population');
+  userEvent.selectOptions(comparison,'maior que');
+  userEvent.type(inputValue, 10000);
+  userEvent.click(btnSearch);
+  userEvent.selectOptions(colum,'diameter');
+  userEvent.selectOptions(comparison,'igual a');
+  userEvent.type(inputValue, 10000);
+  userEvent.click(btnSearch);
+  const filtro = screen.getAllByRole('button', {
+    name: /excluir/i
+  })
+
+  userEvent.click(filtro[0]);
+  const firstPlanet = screen.getAllByTestId('planet-name');
+  // expect(comparison.length).toBe(1);
+  userEvent.click(filtro[1]);
+  // expect(comparison.length).toBe(2);
+  userEvent.click(filtro[2]);
+  expect(firstPlanet[0].innerHTML).toBe('Tatooine');
+  
+  global.fetch.mockClear();
+});
