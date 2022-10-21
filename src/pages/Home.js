@@ -155,7 +155,7 @@ export default function Home() {
       >
         Remover Filtragens
       </button>
-      <DropDown filteredList={ filteredList } setFilteredList={ setFilteredList }/>
+      <DropDown filteredList={ filteredList } setFilteredList={ setFilteredList } />
       <Table filteredList={ filteredList } />
     </div>
   );

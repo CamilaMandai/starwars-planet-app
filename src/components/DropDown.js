@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-export default function DropDown({ setFilteredList, filteredList }) {
+export default function DropDown({ setFilteredList }) {
   const [order, setOrder] = useState({ column: 'population', sort: 'ASC' });
 
   const sortColumn = ({ target }) => {
