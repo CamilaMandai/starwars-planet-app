@@ -3,6 +3,7 @@ import SearchInput from '../components/SearchInput';
 import Selects from '../components/Selects';
 import Table from '../components/Table';
 import { MyContext } from '../context/Provider';
+import DropDown from '../components/DropDown';
 
 export default function Home() {
   const { planetList,
@@ -154,6 +155,7 @@ export default function Home() {
       >
         Remover Filtragens
       </button>
+      <DropDown filteredList={ filteredList } setFilteredList={ setFilteredList }/>
       <Table filteredList={ filteredList } />
     </div>
   );
